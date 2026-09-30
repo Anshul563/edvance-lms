@@ -1,0 +1,6 @@
+FROM node:24-slim
+WORKDIR /app
+RUN npm install -g pnpm@12.4.2
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN echo "--- yaml present? ---" && ls -la pnpm-workspace.yaml && cat pnpm-workspace.yaml && echo "--- cwd ---" && pwd && echo "--- config ---" && pnpm config list 2>&1 | head -20
+RUN pnpm install --frozen-lockfile --prod

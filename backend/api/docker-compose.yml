@@ -1,0 +1,70 @@
+#? Local development stack: API + Redis.
+#? Postgres is intentionally absent. DATABASE_URL points at Neon, so the only
+#? stateful service here is Redis. The api service waits for Redis to report
+#? healthy before starting, otherwise the rate limiter connects to nothing.
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: edvance-redis
+    restart: unless-stopped
+    ports:
+      #? Bound to loopback: an open Redis port on all interfaces is an
+      #? unauthenticated foot-gun on a laptop or a shared network.
+      #? Host port 6380, not 6379: this machine already runs a system Redis on
+      #? 6379. Only the host-facing side moves, so REDIS_URL still resolves
+      #? redis://redis:6379 inside the compose network.
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - redis-data:/data
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      #? Rate-limiter keys are short-lived, so an LRU cap bounds memory if a
+      #? bug ever writes keys without a TTL. 256mb is a ceiling, not a target.
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - allkeys-lru
+    healthcheck:
+      #? PING, not just a TCP check: a Redis can accept connections before it
+      #? is ready to serve commands, and depends_on waits on this result.
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: edvance-api
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      PORT: "4000"
+      LOG_LEVEL: debug
+      CORS_ORIGIN: http://localhost:5173
+      #? Service name resolves on the compose network. Not localhost: inside
+      #? the container, localhost is the container itself.
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+    #? Mounts source for hot reload. node_modules is masked by an anonymous
+    #? volume because the host's pnpm symlink farm would shadow the image's
+    #? correctly-resolved tree, which breaks native and ESM resolution.
+    volumes:
+      - ./src:/app/src
+      - /app/node_modules
+
+volumes:
+  redis-data:

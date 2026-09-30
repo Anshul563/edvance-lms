@@ -1,0 +1,16 @@
+#? pnpm 12 stores build-script approval in allowBuilds, where each package name
+#? is explicitly set to true (approve) or false (deny). This is the supported
+#? configuration that Docker installs rely on.
+#?
+#? argon2 needs to run its native install script to provide the password hashing
+#? module at runtime.
+#?
+#? esbuild must be approved because multiple toolchains (tsx / drizzle-kit) rely
+#? on its platform-specific binary during install.
+#?
+#? @scarf/scarf is a telemetry package with no build work needed, so it is denied.
+
+allowBuilds:
+  argon2: true
+  esbuild: true
+  "@scarf/scarf": false
