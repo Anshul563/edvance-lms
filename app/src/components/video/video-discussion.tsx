@@ -50,8 +50,8 @@ function CommentRow({
               </ThemedText>
             </View>
           ) : null}
-          <ThemedText type="label" themeColor="textSecondary" numberOfLines={1}>
-            {formatTimeAgo(comment.postedAt)}
+          <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+            {formatTimeAgo(comment.postedAt).toLowerCase()}
           </ThemedText>
         </View>
 
@@ -167,8 +167,7 @@ export function VideoDiscussionSection({ videoId, totalCount }: { videoId: strin
       ) : (
         <View
           style={[
-            styles.panel,
-            { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+            styles.panel
           ]}>
           {comments.map((comment, index) => (
             <View key={comment.id}>
@@ -205,8 +204,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   composerAvatar: {
-    width: 32,
-    height: 32,
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: Radius.pill,
@@ -217,7 +216,7 @@ const styles = StyleSheet.create({
     maxHeight: 110,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    borderRadius: Radius.large,
+    borderRadius: Radius.xlarge,
     borderWidth: 1,
     fontSize: 14,
     lineHeight: 20,
@@ -237,7 +236,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.four,
   },
   panel: {
-    marginHorizontal: Spacing.three,
     paddingHorizontal: Spacing.three,
     borderRadius: Radius.large,
     borderWidth: 1,

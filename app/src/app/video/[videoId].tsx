@@ -1,12 +1,19 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer } from "expo-video";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, Share, StyleSheet, useWindowDimensions, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
 import { StandaloneVideoList } from "@/components/channel/channel-sections";
 import { PlayerSurface } from "@/components/player/player-surface";
-import { VideoDiscussionSection } from "@/components/video/video-discussion";
+import { VideoDiscussionSheet } from "@/components/video/video-discussion-sheet";
 import { VideoInfoSheet } from "@/components/video/video-info-sheet";
 import { Radius, Spacing } from "@/constants/theme";
 import { formatCount } from "@/data/courses";
@@ -14,7 +21,13 @@ import { getChannelById } from "@/data/instructors";
 import { getChannelVideoById, STANDALONE_VIDEOS } from "@/data/videos";
 import { usePortraitLock } from "@/hooks/use-portrait-lock";
 import { useTheme } from "@/hooks/use-theme";
-import { MessageCircle, Share2, ThumbsDown, ThumbsUp, TriangleAlert } from "lucide-react-native";
+import {
+  MessageCircle,
+  Share2,
+  ThumbsDown,
+  ThumbsUp,
+  TriangleAlert,
+} from "lucide-react-native";
 
 import type { Quality } from "@/types/course";
 
@@ -27,6 +40,7 @@ export default function VideoScreen() {
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [showDiscussion, setShowDiscussion] = useState(false);
   usePortraitLock();
 
   const video = getChannelVideoById(videoId ?? "");
@@ -60,7 +74,9 @@ export default function VideoScreen() {
     const shouldResume = player.playing;
 
     void player
-      .replaceAsync(next === "auto" ? video.videoUrl : video.videoVariants[next])
+      .replaceAsync(
+        next === "auto" ? video.videoUrl : video.videoVariants[next],
+      )
       .then(() => {
         player.currentTime = resumeAt;
         if (shouldResume) player.play();
@@ -72,7 +88,10 @@ export default function VideoScreen() {
     ? STANDALONE_VIDEOS.filter((item) => item.channelId === video.channelId)
     : [];
   const nextVideo = video
-    ? siblings[(siblings.findIndex((item) => item.id === video.id) + 1) % siblings.length]
+    ? siblings[
+        (siblings.findIndex((item) => item.id === video.id) + 1) %
+          siblings.length
+      ]
     : undefined;
 
   const otherVideos = video
@@ -99,8 +118,12 @@ export default function VideoScreen() {
       <View
         style={[
           styles.fallback,
-          { backgroundColor: theme.background, paddingTop: insets.top + Spacing.five },
-        ]}>
+          {
+            backgroundColor: theme.background,
+            paddingTop: insets.top + Spacing.five,
+          },
+        ]}
+      >
         <TriangleAlert size={40} color={theme.textSecondary} />
         <ThemedText type="heading">Video not found</ThemedText>
         <Pressable onPress={() => router.back()}>
@@ -118,7 +141,9 @@ export default function VideoScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <PlayerSurface
         player={player}
-        source={quality === "auto" ? video.videoUrl : video.videoVariants[quality]}
+        source={
+          quality === "auto" ? video.videoUrl : video.videoVariants[quality]
+        }
         title={video.title}
         hasNext={Boolean(nextVideo)}
         quality={quality}
@@ -135,22 +160,43 @@ export default function VideoScreen() {
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.header}>
           <ThemedText type="heading" numberOfLines={1}>
             {video.title}
           </ThemedText>
           <View style={styles.metaRow}>
-            <ThemedText type="label" themeColor="textSecondary" numberOfLines={1} style={styles.metaItem}>
+            <ThemedText
+              type="label"
+              themeColor="textSecondary"
+              numberOfLines={1}
+              style={styles.metaItem}
+            >
               {channel.handle}
             </ThemedText>
-            <ThemedText type="label" themeColor="textSecondary" numberOfLines={1} style={styles.metaItem}>
+            <ThemedText
+              type="label"
+              themeColor="textSecondary"
+              numberOfLines={1}
+              style={styles.metaItem}
+            >
               {formatCount(likes)} likes
             </ThemedText>
-            <ThemedText type="label" themeColor="textSecondary" numberOfLines={1} style={styles.metaItem}>
+            <ThemedText
+              type="label"
+              themeColor="textSecondary"
+              numberOfLines={1}
+              style={styles.metaItem}
+            >
               {formatCount(video.views)} views
             </ThemedText>
-            <ThemedText type="label" themeColor="textSecondary" numberOfLines={1} style={styles.metaItem}>
+            <ThemedText
+              type="label"
+              themeColor="textSecondary"
+              numberOfLines={1}
+              style={styles.metaItem}
+            >
               {video.publishedAt}
             </ThemedText>
             <Pressable
@@ -158,8 +204,16 @@ export default function VideoScreen() {
               accessibilityLabel="More video details"
               onPress={() => setShowInfo(true)}
               hitSlop={8}
-              style={({ pressed }) => [styles.moreButton, { opacity: pressed ? 0.6 : 1 }]}>
-              <ThemedText type="label" themeColor="brand" style={styles.moreLabel}>
+              style={({ pressed }) => [
+                styles.moreButton,
+                { opacity: pressed ? 0.6 : 1 },
+              ]}
+            >
+              <ThemedText
+                type="label"
+                themeColor="brand"
+                style={styles.moreLabel}
+              >
                 More
               </ThemedText>
             </Pressable>
@@ -176,7 +230,11 @@ export default function VideoScreen() {
                 params: { instructorId: channel.id },
               })
             }
-            style={({ pressed }) => [styles.channelRow, { opacity: pressed ? 0.7 : 1 }]}>
+            style={({ pressed }) => [
+              styles.channelRow,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
             <View style={[styles.avatar, { backgroundColor: channel.accent }]}>
               <ThemedText type="smallBold" style={styles.avatarText}>
                 {channel.name.charAt(0)}
@@ -186,7 +244,11 @@ export default function VideoScreen() {
               <ThemedText type="smallBold" numberOfLines={1}>
                 {channel.name}
               </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+              <ThemedText
+                type="small"
+                themeColor="textSecondary"
+                numberOfLines={1}
+              >
                 {channel.handle}
               </ThemedText>
             </View>
@@ -201,7 +263,8 @@ export default function VideoScreen() {
                 setLiked((value) => !value);
                 setDisliked(false);
               }}
-              style={[styles.action, liked ? styles.actionActive : null]}>
+              style={[styles.action, liked ? styles.actionActive : null]}
+            >
               <ThumbsUp
                 size={18}
                 color={liked ? theme.brand : theme.text}
@@ -213,12 +276,15 @@ export default function VideoScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ selected: disliked }}
-              accessibilityLabel={disliked ? "Remove dislike" : "Dislike this video"}
+              accessibilityLabel={
+                disliked ? "Remove dislike" : "Dislike this video"
+              }
               onPress={() => {
                 setDisliked((value) => !value);
                 setLiked(false);
               }}
-              style={[styles.action, disliked ? styles.actionActive : null]}>
+              style={[styles.action, disliked ? styles.actionActive : null]}
+            >
               <ThumbsDown
                 size={18}
                 color={disliked ? theme.brand : theme.text}
@@ -230,21 +296,31 @@ export default function VideoScreen() {
               accessibilityRole="button"
               accessibilityLabel="Share this video"
               onPress={shareVideo}
-              style={styles.action}>
+              style={styles.action}
+            >
               <Share2 size={18} color={theme.text} />
             </Pressable>
           </View>
         </View>
 
-        <View style={[styles.discussionCard, { backgroundColor: theme.backgroundElement }]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Open discussion, ${formatCount(video.comments)} ${video.comments === 1 ? "comment" : "comments"}`}
+          onPress={() => setShowDiscussion(true)}
+          style={[
+            styles.discussionCard,
+            { backgroundColor: theme.backgroundElement },
+          ]}
+        >
           <MessageCircle size={18} color={theme.brand} />
           <View style={styles.discussionSummary}>
             <ThemedText type="smallBold">Discussion</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              {formatCount(video.comments)} {video.comments === 1 ? "comment" : "comments"}
+              {formatCount(video.comments)}{" "}
+              {video.comments === 1 ? "comment" : "comments"}
             </ThemedText>
           </View>
-        </View>
+        </Pressable>
 
         {recommendations.length > 0 ? (
           <View style={styles.recommended}>
@@ -257,7 +333,6 @@ export default function VideoScreen() {
           </View>
         ) : null}
 
-        <VideoDiscussionSection key={video.id} videoId={video.id} totalCount={video.comments} />
       </ScrollView>
 
       <VideoInfoSheet
@@ -267,6 +342,13 @@ export default function VideoScreen() {
         video={video}
         channel={channel}
         likes={likes}
+      />
+      <VideoDiscussionSheet
+        visible={showDiscussion}
+        topOffset={insets.top + (windowWidth * 9) / 16}
+        onClose={() => setShowDiscussion(false)}
+        videoId={video.id}
+        totalCount={video.comments}
       />
     </View>
   );

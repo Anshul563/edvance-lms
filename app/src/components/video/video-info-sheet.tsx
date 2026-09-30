@@ -40,14 +40,10 @@ export function VideoInfoSheet({
   if (!visible) return null;
 
   return (
-    <View style={StyleSheet.absoluteFill} accessibilityViewIsModal>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Close video details"
-        onPress={onClose}
-        style={[styles.backdrop, { top: 0, height: topOffset }]}
-      />
-
+    <View
+      style={StyleSheet.absoluteFill}
+      pointerEvents="box-none"
+      accessibilityViewIsModal>
       <Animated.View
         style={[
           styles.sheet,
@@ -157,12 +153,6 @@ export function VideoInfoSheet({
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0,0,0,0.45)",
-  },
   sheet: {
     position: "absolute",
     left: 0,
