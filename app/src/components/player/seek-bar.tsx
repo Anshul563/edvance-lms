@@ -5,9 +5,9 @@ import { ThemedText } from "@/components/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import { formatSeconds } from "@/data/courses";
 
-const TRACK_HEIGHT = 3;
-const TRACK_HEIGHT_ACTIVE = 5;
-const THUMB_SIZE = 13;
+const TRACK_HEIGHT = 2;
+const TRACK_HEIGHT_ACTIVE = 4;
+const THUMB_SIZE = 11;
 const CHAR_WIDTH = 7;
 const TOOLTIP_PADDING = 14;
 
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   hitArea: {
     justifyContent: "flex-end",
     paddingBottom: Spacing.two,
-    paddingTop: Spacing.four,
+    paddingTop: Spacing.two,
   },
   track: {
     width: "100%",
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   },
   tooltip: {
     position: "absolute",
-    bottom: Spacing.four + TRACK_HEIGHT_ACTIVE,
+    bottom: Spacing.two + TRACK_HEIGHT_ACTIVE,
     alignItems: "center",
     paddingVertical: Spacing.one,
     borderRadius: Radius.small,

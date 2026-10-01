@@ -18,11 +18,18 @@ import { VideoInfoSheet } from "@/components/video/video-info-sheet";
 import { Radius, Spacing } from "@/constants/theme";
 import { formatCount } from "@/data/courses";
 import { getChannelById } from "@/data/instructors";
+import {
+  formatTimeAgo,
+  getInitialsOf,
+  getVideoCommentColor,
+  getVideoComments,
+} from "@/data/video-discussions";
 import { getChannelVideoById, STANDALONE_VIDEOS } from "@/data/videos";
 import { usePortraitLock } from "@/hooks/use-portrait-lock";
 import { useTheme } from "@/hooks/use-theme";
 import {
-  MessageCircle,
+  Check,
+  ChevronRight,
   Share2,
   ThumbsDown,
   ThumbsUp,
@@ -39,6 +46,9 @@ export default function VideoScreen() {
   const [quality, setQuality] = useState<Quality>("auto");
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
+  const [subscribedChannels, setSubscribedChannels] = useState<
+    Record<string, boolean>
+  >({});
   const [showInfo, setShowInfo] = useState(false);
   const [showDiscussion, setShowDiscussion] = useState(false);
   usePortraitLock();
@@ -136,6 +146,8 @@ export default function VideoScreen() {
   }
 
   const likes = video.likes + (liked ? 1 : 0) - (disliked ? 1 : 0);
+  const subscribed = video ? !!subscribedChannels[video.channelId] : false;
+  const [topComment] = video ? getVideoComments(video.id, 1) : [];
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -221,38 +233,60 @@ export default function VideoScreen() {
         </View>
 
         <View style={styles.topRow}>
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel={`Open channel for ${channel.name}`}
-            onPress={() =>
-              router.push({
-                pathname: "/instructor/[instructorId]",
-                params: { instructorId: channel.id },
-              })
-            }
-            style={({ pressed }) => [
-              styles.channelRow,
-              { opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <View style={[styles.avatar, { backgroundColor: channel.accent }]}>
-              <ThemedText type="smallBold" style={styles.avatarText}>
-                {channel.name.charAt(0)}
-              </ThemedText>
-            </View>
-            <View style={styles.channelText}>
-              <ThemedText type="smallBold" numberOfLines={1}>
-                {channel.name}
-              </ThemedText>
+          <View style={styles.channelRow}>
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel={`Open channel for ${channel.name}`}
+              onPress={() =>
+                router.push({
+                  pathname: "/instructor/[instructorId]",
+                  params: { instructorId: channel.id },
+                })
+              }
+              style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+            >
+              <View style={[styles.avatar, { backgroundColor: channel.accent }]}>
+                <ThemedText type="smallBold" style={styles.avatarText}>
+                  {channel.name.charAt(0)}
+                </ThemedText>
+              </View>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: subscribed }}
+              accessibilityLabel={
+                subscribed
+                  ? `Unsubscribe from ${channel.name}`
+                  : `Subscribe to ${channel.name}`
+              }
+              onPress={() =>
+                setSubscribedChannels((current) => ({
+                  ...current,
+                  [channel.id]: !current[channel.id],
+                }))
+              }
+              style={({ pressed }) => [
+                styles.subscribeButton,
+                {
+                  backgroundColor: subscribed
+                    ? theme.backgroundSelected
+                    : theme.brand,
+                  opacity: pressed ? 0.85 : 1,
+                },
+              ]}
+            >
+              {subscribed ? (
+                <Check size={15} color={theme.text} strokeWidth={3} />
+              ) : null}
               <ThemedText
-                type="small"
-                themeColor="textSecondary"
-                numberOfLines={1}
+                type="smallBold"
+                style={subscribed ? undefined : styles.subscribeLabel}
               >
-                {channel.handle}
+                {subscribed ? "Subscribed" : "Subscribe"}
               </ThemedText>
-            </View>
-          </Pressable>
+            </Pressable>
+          </View>
 
           <View style={styles.actions}>
             <Pressable
@@ -270,7 +304,6 @@ export default function VideoScreen() {
                 color={liked ? theme.brand : theme.text}
                 fill={liked ? theme.brand : "none"}
               />
-              <ThemedText type="smallBold">{formatCount(likes)}</ThemedText>
             </Pressable>
 
             <Pressable
@@ -307,24 +340,60 @@ export default function VideoScreen() {
           accessibilityRole="button"
           accessibilityLabel={`Open discussion, ${formatCount(video.comments)} ${video.comments === 1 ? "comment" : "comments"}`}
           onPress={() => setShowDiscussion(true)}
-          style={[
+          style={({ pressed }) => [
             styles.discussionCard,
-            { backgroundColor: theme.backgroundElement },
+            {
+              backgroundColor: theme.backgroundElement,
+              opacity: pressed ? 0.85 : 1,
+            },
           ]}
         >
-          <MessageCircle size={18} color={theme.brand} />
-          <View style={styles.discussionSummary}>
-            <ThemedText type="smallBold">Discussion</ThemedText>
+          <View style={styles.discussionHeader}>
+            <ThemedText type="smallBold">Comments</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              {formatCount(video.comments)}{" "}
-              {video.comments === 1 ? "comment" : "comments"}
+              {formatCount(video.comments)}
             </ThemedText>
+            <ChevronRight
+              size={16}
+              color={theme.textSecondary}
+              style={styles.discussionChevron}
+            />
           </View>
+          {topComment ? (
+            <View style={styles.commentPreview}>
+              <View
+                style={[
+                  styles.previewAvatar,
+                  {
+                    backgroundColor: getVideoCommentColor(
+                      video.id,
+                      topComment.author,
+                    ),
+                  },
+                ]}
+              >
+                <ThemedText type="label" style={styles.previewAvatarText}>
+                  {getInitialsOf(topComment.author)}
+                </ThemedText>
+              </View>
+              <View style={styles.previewBody}>
+                <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                  {topComment.author} ·{" "}
+                  {formatTimeAgo(topComment.postedAt).toLowerCase()}
+                </ThemedText>
+                <ThemedText type="small" numberOfLines={2}>
+                  {topComment.body}
+                </ThemedText>
+              </View>
+            </View>
+          ) : null}
         </Pressable>
 
         {recommendations.length > 0 ? (
           <View style={styles.recommended}>
-            <ThemedText type="subtitle">Recommended for you</ThemedText>
+            <ThemedText type="subtitle" style={styles.recommendedTitle}>
+              Recommended for you
+            </ThemedText>
             <StandaloneVideoList
               videos={recommendations}
               onOpen={(item) => goToVideo(item.id)}
@@ -410,10 +479,17 @@ const styles = StyleSheet.create({
   avatarText: {
     color: "#FFFFFF",
   },
-  channelText: {
-    flex: 1,
-    gap: 1,
-    minWidth: 0,
+  subscribeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.one,
+    height: 32,
+    paddingHorizontal: Spacing.three,
+    borderRadius: Radius.pill,
+  },
+  subscribeLabel: {
+    color: "#FFFFFF",
   },
   actions: {
     flexDirection: "row",
@@ -421,29 +497,54 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   action: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.one,
-    paddingHorizontal: Spacing.two,
-    height: 36,
+    justifyContent: "center",
+    height: 32,
+    width: 32,
     borderRadius: Radius.pill,
+    backgroundColor: "#1B1B1E",
   },
   actionActive: {
     opacity: 1,
   },
   discussionCard: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: Spacing.two,
     marginHorizontal: Spacing.three,
     padding: Spacing.three,
     borderRadius: Radius.large,
   },
-  discussionSummary: {
-    gap: Spacing.one,
+  discussionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+  },
+  discussionChevron: {
+    marginLeft: "auto",
+  },
+  commentPreview: {
+    flexDirection: "row",
+    gap: Spacing.two,
+  },
+  previewAvatar: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: Radius.pill,
+  },
+  previewAvatarText: {
+    color: "#FFFFFF",
+  },
+  previewBody: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0,
   },
   recommended: {
     gap: Spacing.three,
+  },
+  recommendedTitle: {
+    paddingHorizontal: Spacing.three,
   },
   fallback: {
     flex: 1,

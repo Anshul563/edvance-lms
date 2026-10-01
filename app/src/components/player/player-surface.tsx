@@ -7,7 +7,6 @@ import {
   Maximize,
   Minimize,
   Pause,
-  PictureInPicture2,
   Play,
   RefreshCw,
   RotateCcw,
@@ -447,12 +446,13 @@ export function PlayerSurface({
               { opacity: feedbackFade, transform: [{ scale: feedbackScale }] },
             ]}>
             {feedback.side === "left" ? (
-              <RotateCcw size={26} color="#FFFFFF" />
+              <RotateCcw size={22} color="#FFFFFF" />
             ) : (
-              <RotateCw size={26} color="#FFFFFF" />
+              <RotateCw size={22} color="#FFFFFF" />
             )}
             <ThemedText type="smallBold" style={styles.feedbackText}>
-              {SEEK_STEP} seconds
+              {feedback.side === "left" ? "-" : "+"}
+              {SEEK_STEP}s
             </ThemedText>
           </Animated.View>
         ) : null}
@@ -480,17 +480,6 @@ export function PlayerSurface({
               <ThemedText type="smallBold" numberOfLines={1} style={styles.title}>
                 {title}
               </ThemedText>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Playback settings"
-                hitSlop={8}
-                onPress={() => {
-                  setSettingsOpen((open) => !open);
-                  setControlsVisible(true);
-                }}
-                style={[styles.iconButton, settingsOpen ? styles.iconButtonActive : null]}>
-                <Settings size={20} color="#FFFFFF" />
-              </Pressable>
             </View>
           </View>
 
@@ -525,7 +514,7 @@ export function PlayerSurface({
                 accessibilityLabel="Play"
                 onPress={togglePlay}
                 style={styles.bigButton}>
-                <Play size={32} color="#FFFFFF" fill="#FFFFFF" />
+                <Play size={30} color="#000000" fill="#000000" />
               </Pressable>
             </View>
           ) : null}
@@ -561,9 +550,9 @@ export function PlayerSurface({
                 onPress={togglePlay}
                 style={styles.iconButton}>
                 {isPlaying ? (
-                  <Pause size={20} color="#FFFFFF" fill="#FFFFFF" />
+                  <Pause size={22} color="#FFFFFF" fill="#FFFFFF" />
                 ) : (
-                  <Play size={20} color="#FFFFFF" fill="#FFFFFF" />
+                  <Play size={22} color="#FFFFFF" fill="#FFFFFF" />
                 )}
               </Pressable>
 
@@ -574,7 +563,7 @@ export function PlayerSurface({
                 disabled={!hasNext}
                 onPress={onNext}
                 style={[styles.iconButton, !hasNext ? styles.disabled : null]}>
-                <SkipForward size={20} color="#FFFFFF" fill="#FFFFFF" />
+                <SkipForward size={22} color="#FFFFFF" fill="#FFFFFF" />
               </Pressable>
 
               <Pressable
@@ -585,7 +574,7 @@ export function PlayerSurface({
                 disabled={ambient}
                 onPress={cycleVolume}
                 style={[styles.iconButton, ambient ? styles.disabled : null]}>
-                <VolumeIcon size={20} color="#FFFFFF" />
+                <VolumeIcon size={22} color="#FFFFFF" />
               </Pressable>
 
               <ThemedText type="small" numberOfLines={1} style={styles.time}>
@@ -594,18 +583,17 @@ export function PlayerSurface({
 
               <View style={styles.spacer} />
 
-              {pipSupported ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Picture in picture"
-                  hitSlop={6}
-                  onPress={() => {
-                    void videoRef.current?.startPictureInPicture().catch(() => {});
-                  }}
-                  style={styles.iconButton}>
-                  <PictureInPicture2 size={20} color="#FFFFFF" />
-                </Pressable>
-              ) : null}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Playback settings"
+                hitSlop={6}
+                onPress={() => {
+                  setSettingsOpen(true);
+                  setControlsVisible(true);
+                }}
+                style={[styles.iconButton, settingsOpen ? styles.iconButtonActive : null]}>
+                <Settings size={20} color="#FFFFFF" />
+              </Pressable>
 
               <Pressable
                 accessibilityRole="button"
@@ -641,6 +629,11 @@ export function PlayerSurface({
                 } else {
                   exitAmbient();
                 }
+              }}
+              canPictureInPicture={pipSupported}
+              onPictureInPicture={() => {
+                setSettingsOpen(false);
+                void videoRef.current?.startPictureInPicture().catch(() => {});
               }}
               onClose={() => setSettingsOpen(false)}
             />
@@ -715,18 +708,18 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   bigButton: {
-    width: 64,
-    height: 64,
+    width: 60,
+    height: 60,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: Radius.pill,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: "#FFFFFF",
   },
   bottomBar: {
     paddingBottom: Spacing.two,
   },
   seekWrap: {
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.two,
   },
   controlsRow: {
     flexDirection: "row",
@@ -750,6 +743,7 @@ const styles = StyleSheet.create({
   time: {
     marginLeft: Spacing.one,
     color: "#FFFFFF",
+    fontVariant: ["tabular-nums"],
   },
   errorText: {
     color: "#FFFFFF",
@@ -772,18 +766,21 @@ const styles = StyleSheet.create({
   },
   feedbackLayer: {
     position: "absolute",
-    top: 0,
-    bottom: 0,
+    top: "50%",
+    marginTop: -48,
+    width: 96,
+    height: 96,
     justifyContent: "center",
     alignItems: "center",
-    gap: Spacing.one,
-    width: 120,
+    gap: 2,
+    borderRadius: Radius.pill,
+    backgroundColor: "rgba(0,0,0,0.55)",
   },
   feedbackLeft: {
-    left: 0,
+    left: Spacing.five,
   },
   feedbackRight: {
-    right: 0,
+    right: Spacing.five,
   },
   feedbackText: {
     color: "#FFFFFF",
