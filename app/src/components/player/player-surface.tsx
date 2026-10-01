@@ -17,11 +17,12 @@ import {
   Volume1,
   VolumeX,
 } from "lucide-react-native";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
   BackHandler,
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
@@ -97,6 +98,8 @@ type PlayerSurfaceProps = {
   onBack: () => void;
   onNext: () => void;
   onEnded: () => void;
+  minimized: boolean;
+  onMinimize: () => void;
 };
 
 export function PlayerSurface({
@@ -109,6 +112,8 @@ export function PlayerSurface({
   onBack,
   onNext,
   onEnded,
+  minimized,
+  onMinimize,
 }: PlayerSurfaceProps) {
   const insets = useSafeAreaInsets();
   const videoRef = useRef<VideoView>(null);
@@ -119,6 +124,8 @@ export function PlayerSurface({
   const singleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seekCounter = useRef(0);
+  const lastGlowSync = useRef(0);
+  const rateRef = useRef(1);
 
   const fade = useState(() => new Animated.Value(1))[0];
   const feedbackScale = useState(() => new Animated.Value(0))[0];
@@ -245,7 +252,8 @@ export function PlayerSurface({
       .then(() => {
         if (cancelled) return;
         setTime(glowPlayer, player.currentTime);
-        setPlaybackRate(glowPlayer, rate);
+        setPlaybackRate(glowPlayer, rateRef.current);
+        lastGlowSync.current = Date.now();
         if (player.playing) {
           playVideo(glowPlayer);
         } else {
@@ -257,13 +265,28 @@ export function PlayerSurface({
     return () => {
       cancelled = true;
     };
-  }, [ambient, glowPlayer, player, rate, source]);
+  }, [ambient, glowPlayer, player, source]);
+
+  useEffect(() => {
+    rateRef.current = rate;
+  }, [rate]);
 
   useEffect(() => {
     if (!ambient || glowStatus !== "readyToPlay") return;
 
     setPlaybackRate(glowPlayer, rate);
-    if (Math.abs(glowPlayer.currentTime - player.currentTime) > 0.4) {
+  }, [ambient, glowPlayer, glowStatus, rate]);
+
+  useEffect(() => {
+    if (!ambient || glowStatus !== "readyToPlay") return;
+
+    // Native seeks land asynchronously — resync at most once per interval so
+    // consecutive ticks don't pile seeks onto the glow player and make it
+    // stutter.
+    const drift = Math.abs(glowPlayer.currentTime - player.currentTime);
+    const now = Date.now();
+    if (drift > 1 && now - lastGlowSync.current > 1500) {
+      lastGlowSync.current = now;
       setTime(glowPlayer, player.currentTime);
     }
     if (isPlaying && !glowPlayer.playing) {
@@ -271,7 +294,7 @@ export function PlayerSurface({
     } else if (!isPlaying && glowPlayer.playing) {
       pauseVideo(glowPlayer);
     }
-  }, [ambient, currentTime, glowPlayer, glowStatus, isPlaying, player, rate]);
+  }, [ambient, currentTime, glowPlayer, glowStatus, isPlaying, player]);
 
   const exitFullscreen = leaveFullscreen;
 
@@ -357,6 +380,24 @@ export function PlayerSurface({
     widthRef.current = event.nativeEvent.layout.width;
   };
 
+  const minimizePan = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_, gesture) =>
+          !fullscreen &&
+          !settingsOpen &&
+          gesture.dy > 12 &&
+          gesture.dy > Math.abs(gesture.dx) * 2,
+        onPanResponderRelease: (_, gesture) => {
+          if (gesture.dy > 60 || gesture.vy > 0.5) {
+            onMinimize();
+          }
+        },
+      }),
+    [fullscreen, onMinimize, settingsOpen],
+  );
+
   const startScrub = () => {
     setSettingsOpen(false);
     setSeekTolerance(player, SCRUB_TOLERANCE);
@@ -383,6 +424,10 @@ export function PlayerSurface({
 
   const VolumeIcon = muted ? VolumeX : volume > 0.6 ? Volume2 : Volume1;
 
+  if (minimized) {
+    return <View />;
+  }
+
   return (
     <View
       style={[
@@ -391,7 +436,8 @@ export function PlayerSurface({
       ]}>
       <View
         style={fullscreen ? styles.fullscreenStage : styles.inlineStage}
-        onLayout={handleStageLayout}>
+        onLayout={handleStageLayout}
+        {...minimizePan.panHandlers}>
         {ambient ? (
           <View style={styles.glowLayer} pointerEvents="none">
             <BlurTargetView ref={glowTargetRef} style={styles.glowTarget}>

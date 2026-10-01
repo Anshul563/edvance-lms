@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer } from "expo-video";
 import { useEffect, useRef, useState } from "react";
 import {
+  BackHandler,
   Pressable,
   ScrollView,
   Share,
@@ -12,6 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
 import { StandaloneVideoList } from "@/components/channel/channel-sections";
+import { MiniPlayer } from "@/components/player/mini-player";
 import { PlayerSurface } from "@/components/player/player-surface";
 import { VideoDiscussionSheet } from "@/components/video/video-discussion-sheet";
 import { VideoInfoSheet } from "@/components/video/video-info-sheet";
@@ -51,6 +53,7 @@ export default function VideoScreen() {
   >({});
   const [showInfo, setShowInfo] = useState(false);
   const [showDiscussion, setShowDiscussion] = useState(false);
+  const [minimized, setMinimized] = useState(false);
   usePortraitLock();
 
   const video = getChannelVideoById(videoId ?? "");
@@ -75,6 +78,17 @@ export default function VideoScreen() {
       })
       .catch(() => {});
   }, [video, player]);
+
+  useEffect(() => {
+    if (!minimized) return;
+
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      setMinimized(false);
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [minimized]);
 
   const changeQuality = (next: Quality) => {
     if (!video || next === quality) return;
@@ -167,6 +181,8 @@ export default function VideoScreen() {
         onEnded={() => {
           if (nextVideo) goToVideo(nextVideo.id);
         }}
+        minimized={minimized}
+        onMinimize={() => setMinimized(true)}
       />
 
       <ScrollView
@@ -403,6 +419,18 @@ export default function VideoScreen() {
         ) : null}
 
       </ScrollView>
+
+      {minimized ? (
+        <MiniPlayer
+          player={player}
+          title={video.title}
+          onExpand={() => setMinimized(false)}
+          onClose={() => {
+            player.pause();
+            setMinimized(false);
+          }}
+        />
+      ) : null}
 
       <VideoInfoSheet
         visible={showInfo}

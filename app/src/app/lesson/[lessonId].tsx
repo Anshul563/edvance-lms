@@ -1,10 +1,11 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer } from "expo-video";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, Share, StyleSheet, TextInput, View } from "react-native";
+import { BackHandler, Pressable, ScrollView, Share, StyleSheet, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CourseThumbnail } from "@/components/course-thumbnail";
 import { LessonList } from "@/components/player/lesson-list";
+import { MiniPlayer } from "@/components/player/mini-player";
 import { PlayerSurface } from "@/components/player/player-surface";
 import { Recommendations } from "@/components/player/recommendations";
 import { ThemedText } from "@/components/themed-text";
@@ -74,6 +75,7 @@ export default function LessonPlayerScreen() {
   const [votedThreadIds, setVotedThreadIds] = useState<string[]>([]);
   const [draft, setDraft] = useState("");
   const [quality, setQuality] = useState<Quality>("auto");
+  const [minimized, setMinimized] = useState(false);
   usePortraitLock();
 
   const context = getLessonContext(lessonId ?? "");
@@ -100,8 +102,18 @@ export default function LessonPlayerScreen() {
       .catch(() => {});
   }, [lesson, player]);
 
-  const changeQuality = (next: Quality) => {
-    if (!lesson || next === quality) return;
+  useEffect(() => {
+    if (!minimized) return;
+
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      setMinimized(false);
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [minimized]);
+
+  const changeQuality = (next: Quality) => {    if (!lesson || next === quality) return;
 
     setQuality(next);
     const resumeAt = player.currentTime;
@@ -223,6 +235,8 @@ export default function LessonPlayerScreen() {
         onEnded={() => {
           if (nextLesson) goToLesson(nextLesson.id);
         }}
+        minimized={minimized}
+        onMinimize={() => setMinimized(true)}
       />
 
       <ScrollView
@@ -750,6 +764,18 @@ export default function LessonPlayerScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      {minimized ? (
+        <MiniPlayer
+          player={player}
+          title={lesson.title}
+          onExpand={() => setMinimized(false)}
+          onClose={() => {
+            player.pause();
+            setMinimized(false);
+          }}
+        />
+      ) : null}
     </View>
   );
 }
