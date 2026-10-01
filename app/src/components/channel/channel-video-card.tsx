@@ -127,7 +127,7 @@ export function ChannelVideoRow({ video, onPress }: ChannelVideoRowProps) {
   );
 }
 
-export type StandaloneVideoLayout = "row" | "feature";
+export type StandaloneVideoLayout = "row" | "feature" | "feed";
 
 type StandaloneVideoRowProps = {
   video: StandaloneVideo;
@@ -138,7 +138,56 @@ type StandaloneVideoRowProps = {
 export function StandaloneVideoRow({ video, onPress, layout = "row" }: StandaloneVideoRowProps) {
   const theme = useTheme();
   const featured = layout === "feature";
+  const feed = layout === "feed";
   const channel = getChannelById(video.channelId);
+
+  if (feed) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${video.title}, ${Math.round(video.durationSeconds / 60)} minutes, ${formatCount(video.views)} views`}
+        onPress={onPress}
+        style={({ pressed }) => [styles.feedCard, { opacity: pressed ? 0.85 : 1 }]}>
+        <View style={[styles.feedThumb, { backgroundColor: theme.brand }]}>
+          <Image
+            source={{ uri: video.thumbnailUrl }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            transition={200}
+          />
+          <View style={[styles.duration, { backgroundColor: "rgba(0,0,0,0.75)" }]}>
+            <ThemedText type="label" style={styles.badge}>
+              {formatSeconds(video.durationSeconds)}
+            </ThemedText>
+          </View>
+        </View>
+
+        <View style={styles.feedMeta}>
+          {channel ? (
+            <Image
+              source={{ uri: channel.avatarUrl }}
+              style={styles.feedAvatar}
+              contentFit="cover"
+              transition={200}
+            />
+          ) : null}
+          <View style={styles.feedText}>
+            <ThemedText type="smallBold" numberOfLines={2}>
+              {video.title}
+            </ThemedText>
+            <ThemedText
+              type="label"
+              themeColor="textSecondary"
+              numberOfLines={1}
+              style={styles.metaLine}>
+              {channel ? `${channel.name} · ` : ""}
+              {formatCount(video.views)} views · {video.publishedAt}
+            </ThemedText>
+          </View>
+        </View>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable
@@ -386,6 +435,29 @@ const styles = StyleSheet.create({
   rowText: {
     flex: 1,
     gap: 4,
+  },
+  feedCard: {
+    width: "100%",
+  },
+  feedThumb: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+  },
+  feedMeta: {
+    flexDirection: "row",
+    gap: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+  feedAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.pill,
+  },
+  feedText: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0,
   },
   feature: {
     gap: Spacing.two,

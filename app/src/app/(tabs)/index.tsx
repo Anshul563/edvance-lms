@@ -42,33 +42,35 @@ export default function HomeScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
-        <AppBar hasUnread />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}>
-          {["All", ...CATEGORIES].map((item) => {
-            const active = item === category;
-            return (
-              <Pressable
-                key={item}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                accessibilityLabel={`${item} category`}
-                onPress={() => setCategory(item)}
-                style={({ pressed }) => [
-                  styles.chip,
-                  active
-                    ? { backgroundColor: theme.brand, opacity: pressed ? 0.8 : 1 }
-                    : { backgroundColor: theme.backgroundElement, opacity: pressed ? 0.7 : 1 },
-                ]}>
-                <ThemedText type="smallBold" style={active ? styles.whiteText : undefined}>
-                  {item}
-                </ThemedText>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        <View style={styles.topBlock}>
+          <AppBar hasUnread />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipRow}>
+            {["All", ...CATEGORIES].map((item) => {
+              const active = item === category;
+              return (
+                <Pressable
+                  key={item}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={`${item} category`}
+                  onPress={() => setCategory(item)}
+                  style={({ pressed }) => [
+                    styles.chip,
+                    active
+                      ? { backgroundColor: theme.brand, opacity: pressed ? 0.8 : 1 }
+                      : { backgroundColor: theme.backgroundElement, opacity: pressed ? 0.7 : 1 },
+                  ]}>
+                  <ThemedText type="smallBold" style={active ? styles.whiteText : undefined}>
+                    {item}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
 
         {continueItems.length > 0 ? (
           <Section title="Continue learning">
@@ -89,6 +91,7 @@ export default function HomeScreen() {
               videos={latestVideos}
               onOpen={(video) => openVideo(video.id)}
               emptyLabel="No videos yet."
+              layout="feed"
             />
           </Section>
         ) : null}
@@ -128,7 +131,10 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.five,
+    gap: Spacing.four,
+  },
+  topBlock: {
+    gap: Spacing.two,
   },
   header: {
     flexDirection: "row",

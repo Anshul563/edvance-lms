@@ -368,7 +368,14 @@ export function StandaloneVideoList({
   if (videos.length === 0) return <ChannelEmpty label={emptyLabel} />;
 
   return (
-    <View style={layout === "feature" ? styles.fullBleedList : styles.list}>
+    <View
+      style={
+        layout === "feature"
+          ? styles.fullBleedList
+          : layout === "feed"
+            ? styles.videoFeed
+            : styles.list
+      }>
       {videos.map((video) => (
         <StandaloneVideoRow
           key={video.id}
@@ -594,6 +601,9 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: Spacing.three,
     gap: Spacing.three,
+  },
+  videoFeed: {
+    gap: Spacing.four,
   },
   fullBleedList: {
     gap: Spacing.four,
