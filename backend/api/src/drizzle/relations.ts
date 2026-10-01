@@ -13,6 +13,29 @@ import {
   ordersTable
 } from "./schemas/commerce.schema";
 import { coursesTable } from "./schemas/course.schema";
+import { creatorVideosTable } from "./schemas/creator-videos.schema";
+import {
+  discussionRepliesTable,
+  discussionThreadsTable,
+  discussionVotesTable
+} from "./schemas/discussions.schema";
+import {
+  courseReviewsTable,
+  subscriptionsTable,
+  videoReactionsTable,
+  wishlistTable
+} from "./schemas/engagement.schema";
+import {
+  achievementsTable,
+  certificatesTable,
+  learningActivityTable,
+  userAchievementsTable
+} from "./schemas/gamification.schema";
+import {
+  searchHistoryTable,
+  videoWatchHistoryTable
+} from "./schemas/history.schema";
+import { notificationsTable } from "./schemas/notifications.schema";
 import { lessonsTable } from "./schemas/lesson.schema";
 import { userRoleGrantsTable, usersTable } from "./schemas/user.schema";
 import {
@@ -31,7 +54,20 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   courses: many(coursesTable),
   enrollments: many(enrollmentsTable),
   orders: many(ordersTable),
-  lessonProgress: many(lessonProgressTable)
+  lessonProgress: many(lessonProgressTable),
+  subscriptions: many(subscriptionsTable),
+  videoReactions: many(videoReactionsTable),
+  courseReviews: many(courseReviewsTable),
+  wishlist: many(wishlistTable),
+  watchHistory: many(videoWatchHistoryTable),
+  searchHistory: many(searchHistoryTable),
+  achievements: many(userAchievementsTable),
+  certificates: many(certificatesTable),
+  learningActivity: many(learningActivityTable),
+  notifications: many(notificationsTable),
+  threads: many(discussionThreadsTable),
+  replies: many(discussionRepliesTable),
+  votes: many(discussionVotesTable)
 }));
 
 export const userRoleGrantsRelations = relations(
@@ -55,8 +91,23 @@ export const channelsRelations = relations(channelsTable, ({ one, many }) => ({
     fields: [channelsTable.ownerId],
     references: [usersTable.id]
   }),
-  courses: many(coursesTable)
+  courses: many(coursesTable),
+  creatorVideos: many(creatorVideosTable),
+  subscriptions: many(subscriptionsTable)
 }));
+
+export const creatorVideosRelations = relations(
+  creatorVideosTable,
+  ({ one, many }) => ({
+    channel: one(channelsTable, {
+      fields: [creatorVideosTable.channelId],
+      references: [channelsTable.id]
+    }),
+    reactions: many(videoReactionsTable),
+    watchHistory: many(videoWatchHistoryTable),
+    threads: many(discussionThreadsTable)
+  })
+);
 
 export const coursesRelations = relations(coursesTable, ({ one, many }) => ({
   channel: one(channelsTable, {
@@ -69,7 +120,10 @@ export const coursesRelations = relations(coursesTable, ({ one, many }) => ({
   }),
   lessons: many(lessonsTable),
   enrollments: many(enrollmentsTable),
-  orders: many(ordersTable)
+  orders: many(ordersTable),
+  reviews: many(courseReviewsTable),
+  wishlist: many(wishlistTable),
+  certificates: many(certificatesTable)
 }));
 
 export const lessonsRelations = relations(lessonsTable, ({ one, many }) => ({
@@ -80,7 +134,8 @@ export const lessonsRelations = relations(lessonsTable, ({ one, many }) => ({
   progress: many(lessonProgressTable),
   poster: one(lessonPostersTable),
   video: one(lessonVideosTable),
-  uploadSessions: many(uploadSessionsTable)
+  uploadSessions: many(uploadSessionsTable),
+  threads: many(discussionThreadsTable)
 }));
 
 export const lessonPostersRelations = relations(
@@ -156,6 +211,191 @@ export const lessonProgressRelations = relations(
     lesson: one(lessonsTable, {
       fields: [lessonProgressTable.lessonId],
       references: [lessonsTable.id]
+    })
+  })
+);
+
+export const videoReactionsRelations = relations(
+  videoReactionsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [videoReactionsTable.userId],
+      references: [usersTable.id]
+    }),
+    video: one(creatorVideosTable, {
+      fields: [videoReactionsTable.videoId],
+      references: [creatorVideosTable.id]
+    })
+  })
+);
+
+export const subscriptionsRelations = relations(
+  subscriptionsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [subscriptionsTable.userId],
+      references: [usersTable.id]
+    }),
+    channel: one(channelsTable, {
+      fields: [subscriptionsTable.channelId],
+      references: [channelsTable.id]
+    })
+  })
+);
+
+export const courseReviewsRelations = relations(
+  courseReviewsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [courseReviewsTable.userId],
+      references: [usersTable.id]
+    }),
+    course: one(coursesTable, {
+      fields: [courseReviewsTable.courseId],
+      references: [coursesTable.id]
+    })
+  })
+);
+
+export const wishlistRelations = relations(wishlistTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [wishlistTable.userId],
+    references: [usersTable.id]
+  }),
+  course: one(coursesTable, {
+    fields: [wishlistTable.courseId],
+    references: [coursesTable.id]
+  })
+}));
+
+export const discussionThreadsRelations = relations(
+  discussionThreadsTable,
+  ({ one, many }) => ({
+    author: one(usersTable, {
+      fields: [discussionThreadsTable.authorId],
+      references: [usersTable.id]
+    }),
+    lesson: one(lessonsTable, {
+      fields: [discussionThreadsTable.lessonId],
+      references: [lessonsTable.id]
+    }),
+    video: one(creatorVideosTable, {
+      fields: [discussionThreadsTable.videoId],
+      references: [creatorVideosTable.id]
+    }),
+    replies: many(discussionRepliesTable),
+    votes: many(discussionVotesTable)
+  })
+);
+
+export const discussionRepliesRelations = relations(
+  discussionRepliesTable,
+  ({ one, many }) => ({
+    thread: one(discussionThreadsTable, {
+      fields: [discussionRepliesTable.threadId],
+      references: [discussionThreadsTable.id]
+    }),
+    author: one(usersTable, {
+      fields: [discussionRepliesTable.authorId],
+      references: [usersTable.id]
+    }),
+    votes: many(discussionVotesTable)
+  })
+);
+
+export const discussionVotesRelations = relations(
+  discussionVotesTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [discussionVotesTable.userId],
+      references: [usersTable.id]
+    }),
+    thread: one(discussionThreadsTable, {
+      fields: [discussionVotesTable.threadId],
+      references: [discussionThreadsTable.id]
+    }),
+    reply: one(discussionRepliesTable, {
+      fields: [discussionVotesTable.replyId],
+      references: [discussionRepliesTable.id]
+    })
+  })
+);
+
+export const videoWatchHistoryRelations = relations(
+  videoWatchHistoryTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [videoWatchHistoryTable.userId],
+      references: [usersTable.id]
+    }),
+    video: one(creatorVideosTable, {
+      fields: [videoWatchHistoryTable.videoId],
+      references: [creatorVideosTable.id]
+    })
+  })
+);
+
+export const searchHistoryRelations = relations(
+  searchHistoryTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [searchHistoryTable.userId],
+      references: [usersTable.id]
+    })
+  })
+);
+
+export const achievementsRelations = relations(
+  achievementsTable,
+  ({ many }) => ({
+    earners: many(userAchievementsTable)
+  })
+);
+
+export const userAchievementsRelations = relations(
+  userAchievementsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [userAchievementsTable.userId],
+      references: [usersTable.id]
+    }),
+    achievement: one(achievementsTable, {
+      fields: [userAchievementsTable.achievementId],
+      references: [achievementsTable.id]
+    })
+  })
+);
+
+export const certificatesRelations = relations(
+  certificatesTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [certificatesTable.userId],
+      references: [usersTable.id]
+    }),
+    course: one(coursesTable, {
+      fields: [certificatesTable.courseId],
+      references: [coursesTable.id]
+    })
+  })
+);
+
+export const learningActivityRelations = relations(
+  learningActivityTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [learningActivityTable.userId],
+      references: [usersTable.id]
+    })
+  })
+);
+
+export const notificationsRelations = relations(
+  notificationsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [notificationsTable.userId],
+      references: [usersTable.id]
     })
   })
 );
