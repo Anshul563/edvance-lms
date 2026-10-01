@@ -1,6 +1,6 @@
 import { MessageCircle, Send, ThumbsUp } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
@@ -158,37 +158,43 @@ export function VideoDiscussionSection({ videoId, totalCount }: { videoId: strin
         </Pressable>
       </View>
 
-      {comments.length === 0 ? (
-        <View style={styles.empty}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
-            No comments yet. Be the first to say something.
-          </ThemedText>
-        </View>
-      ) : (
-        <View
-          style={[
-            styles.panel
-          ]}>
-          {comments.map((comment, index) => (
-            <View key={comment.id}>
-              {index > 0 ? (
-                <View style={[styles.divider, { backgroundColor: theme.border }]} />
-              ) : null}
-              <CommentRow
-                comment={comment}
-                voted={voted.includes(comment.id)}
-                onToggleVote={() => toggleVote(comment.id)}
-              />
-            </View>
-          ))}
-        </View>
-      )}
+      <View style={[styles.separator, { backgroundColor: theme.border }]} />
+
+      <ScrollView
+        style={styles.commentsScroll}
+        contentContainerStyle={styles.commentsContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        {comments.length === 0 ? (
+          <View style={styles.empty}>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
+              No comments yet. Be the first to say something.
+            </ThemedText>
+          </View>
+        ) : (
+          <View style={styles.panel}>
+            {comments.map((comment, index) => (
+              <View key={comment.id}>
+                {index > 0 ? (
+                  <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                ) : null}
+                <CommentRow
+                  comment={comment}
+                  voted={voted.includes(comment.id)}
+                  onToggleVote={() => toggleVote(comment.id)}
+                />
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   section: {
+    flex: 1,
     gap: Spacing.three,
   },
   headingRow: {
@@ -202,6 +208,16 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: Spacing.three,
+  },
+  commentsScroll: {
+    flex: 1,
+  },
+  commentsContent: {
+    flexGrow: 1,
   },
   composerAvatar: {
     width: 40,
