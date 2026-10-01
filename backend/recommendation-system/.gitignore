@@ -1,0 +1,42 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+.env/
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Test + coverage artifacts
+.pytest_cache/
+.coverage
+coverage/
+htmlcov/
+
+# Type checkers
+.mypy_cache/
+.ruff_cache/
+
+# Runtime data (regenerated via scripts/seed_demo.py + /train)
+data/events.jsonl
+data/artifacts/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

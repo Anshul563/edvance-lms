@@ -54,5 +54,26 @@ services:
     volumes:
       - ./video-engine/uploads:/app/uploads
 
+  recommender:
+    build:
+      context: ./recommendation-system
+      dockerfile: Dockerfile
+    container_name: edvance-recommender
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+    environment:
+      PORT: "8000"
+      DATA_DIR: /app/data
+      AUTOTRAIN_EVERY: "200"
+      REDIS_URL: redis://redis:6379
+      REC_CACHE_TTL: "120"
+    volumes:
+      - recommender-data:/app/data
+
 volumes:
   redis-data:
+  recommender-data:

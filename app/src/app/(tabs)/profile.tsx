@@ -52,7 +52,7 @@ export default function ProfileScreen() {
                 {PROFILE.firstName} {PROFILE.lastName}
               </ThemedText>
               <View style={styles.handleRow}>
-                <ThemedText type="small" themeColor="textSecondary">
+                <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
                   @{PROFILE.username}
                 </ThemedText>
                 <View style={[styles.badge, { backgroundColor: theme.brandMuted }]}>
@@ -61,24 +61,32 @@ export default function ProfileScreen() {
                   </ThemedText>
                 </View>
               </View>
+              <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                Member since {formatMonthYear(PROFILE.joinedAt)}
+              </ThemedText>
             </View>
           </View>
 
-          <ThemedText type="body" themeColor="textSecondary">
+          <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
             {PROFILE.bio}
           </ThemedText>
         </View>
 
-        <View style={styles.statsRow}>
-          {stats.map((stat) => {
+        <View style={[styles.statsStrip, { backgroundColor: theme.backgroundElement }]}>
+          {stats.map((stat, index) => {
             const StatIcon = stat.icon;
             return (
               <View
                 key={stat.label}
-                style={[styles.statCard, { backgroundColor: theme.backgroundElement }]}>
-                <StatIcon size={18} color={theme.brand} />
-                <ThemedText type="subtitle">{stat.value}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                style={[
+                  styles.statCell,
+                  index < stats.length - 1
+                    ? { borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: theme.border }
+                    : null,
+                ]}>
+                <StatIcon size={16} color={theme.brand} />
+                <ThemedText type="smallBold">{stat.value}</ThemedText>
+                <ThemedText type="label" themeColor="textSecondary" numberOfLines={1}>
                   {stat.label}
                 </ThemedText>
               </View>
@@ -140,10 +148,10 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.five,
+    gap: Spacing.four,
   },
   header: {
-    gap: Spacing.three,
+    gap: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.two,
   },
@@ -153,15 +161,16 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   avatar: {
-    width: 68,
-    height: 68,
+    width: 72,
+    height: 72,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: Radius.pill,
   },
   identityText: {
     flex: 1,
-    gap: Spacing.half,
+    gap: 2,
+    minWidth: 0,
   },
   handleRow: {
     flexDirection: "row",
@@ -173,18 +182,18 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: Radius.pill,
   },
-  statsRow: {
+  statsStrip: {
     flexDirection: "row",
-    gap: Spacing.two,
-    paddingHorizontal: Spacing.three,
+    alignItems: "center",
+    marginHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Radius.large,
   },
-  statCard: {
+  statCell: {
     flex: 1,
     alignItems: "center",
-    gap: Spacing.half,
-    paddingVertical: Spacing.three,
+    gap: 2,
     paddingHorizontal: Spacing.one,
-    borderRadius: Radius.large,
   },
   cardRow: {
     paddingHorizontal: Spacing.three,
